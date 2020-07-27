@@ -1,0 +1,93 @@
+# %% [code]
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import seaborn as sn
+import os
+print(os.listdir("../input/earthquake"))
+
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+
+
+# %% [code]
+from subprocess import check_output
+print(check_output(["ls", "../input/earthquake"]).decode("utf8"))
+
+# %% [code]
+veri=pd.read_csv(('../input/earthquake/earthquake.csv'), encoding='utf-8', engine='python',sep=',',error_bad_lines=False)
+veri.describe()
+
+# %% [raw]
+# veri.info() 
+# 
+
+# %% [code]
+veri.corr()
+
+# %% [code]
+veri=veri[['date','time','lat','city','long','depth','xm']]    #index 1: Kocaeli earthquake is our prediction 
+data=veri.head(10)  
+print(data)
+
+# %% [code]
+veri=veri[['lat','long','depth','xm']]    #index 1 is our prediction earthquake
+data=veri.head(10)  
+print(data)
+
+# %% [code]
+import numpy as np #use numpy for y variable for Linear Regression
+y=np.array(veri['xm'])
+
+# %% [code]
+X=np.array(veri.drop('xm',axis=1)) #prepare attribute (X variable) and drop the predicted value
+
+# %% [code]
+from sklearn.model_selection import train_test_split  #lets split data set
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=2)
+
+# %% [code]
+from sklearn.linear_model import LinearRegression  #lets set LR model
+
+# %% [code]
+linear=LinearRegression() #taking an example
+
+# %% [code]
+linear.fit(X_train,y_train) #training data
+
+# %% [code]
+data=linear.score(X_test,y_test)  # score of test datas
+print(data)
+
+# %% [code]
+data=linear.score(X_train,y_train) #score of training datas
+print(data)
+
+# %% [code]
+print('coefficients: \n',linear.coef_) 
+print('intercepts: \n',linear.intercept_)
+
+
+# %% [code]
+predict_data=np.array([[40.05,35.80,10.0]])   #kocaeli earthquake prediction is 4.05, quiet close to the real value
+data2=linear.predict(predict_data)
+print(data2)   
+
+# %% [code]
+import matplotlib.pyplot as plt
+import seaborn as sn
+f,ax = plt.subplots(figsize=(10, 10))
+sn.heatmap(veri.corr(), annot=True, linewidths=.9, fmt= '.2f',ax=ax)
+plt.show()
+
+# %% [code]
+veri.depth.plot(kind="line",grid=True,label="depth",linestyle=":",color="r")
+veri.lat.plot(kind="line",grid=True,label="latitude",linestyle="-",color="g")
+veri.xm.plot(kind="line",grid=True,label="magnitude",linestyle="--",color="b")
+plt.legend(loc="best")  
+plt.title("depth-lat-mag")
+plt.show()
